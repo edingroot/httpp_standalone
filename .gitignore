@@ -38,6 +38,7 @@ gen### C++ template
 ### CMake template
 CMakeCache.txt
 CMakeFiles
+build
 cmake-build-debug
 CMakeScripts
 Testing

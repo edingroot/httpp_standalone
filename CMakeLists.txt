@@ -19,14 +19,10 @@ find_package(OpenSSL REQUIRED)
 include_directories(${OPENSSL_INCLUDE_DIR})
 link_libraries(${OpenSSL_LIBRARIES})
 
-# All depedencies
+# Depedency list of HTTPP
 set(HTTPP_DEPS
     ${commonpp_LIBRARIES}
-    ${Boost_LIBRARIES}
-    ${CURL_LIBRARIES}
-    ${CMAKE_THREAD_LIBS_INIT}
     ${OPENSSL_LIBRARIES})
-
 if (UNIX AND NOT APPLE)
     SET (HTTPP_DEPS ${HTTPP_DEPS} rt)
 endif()
@@ -37,4 +33,4 @@ set(SOURCE_FILES
         src/main.cpp)
 add_executable(${PROJECT_NAME} ${SOURCE_FILES})
 
-target_link_libraries(${PROJECT_NAME} httpp ${HTTPP_DEPS})
+target_link_libraries(${PROJECT_NAME} HTTPP ${HTTPP_DEPS})
