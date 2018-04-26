@@ -1,6 +1,6 @@
 # HTTPP Standalone Demo
 
-This is a demo usage of daedric/httpp with standalone source code (tested on macOS High Sierra).  
+This is a demo usage of [daedric/HTTPP](https://github.com/daedric/httpp) with standalone source code (tested on macOS High Sierra).  
 
 
 ## Configuration Steps
@@ -48,7 +48,7 @@ Clone the git repository.
 
 Modify installation path from /usr/* to /usr/local/* ```CMakeLists.txt```:
 ```
- * _CMAKE_DIR "local/lib/CMake/HTTPP"
+ * _CMAKE_DIR: local/lib/CMake/HTTPP
  * INSTALL_LIB_DIR: local/lib
  * INSTALL_BIN_DIR: local/bin
  * INSTALL_INCLUDE_DIR: local/include
@@ -63,5 +63,5 @@ $ mkdir build
 $ cmake ..
 $ make -j4
 $ make test
-* sudo make install
+$ sudo make install
 ``` 

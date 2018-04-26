@@ -36,20 +36,17 @@ void handler(Connection *connection) {
         std::ostringstream out;
         out << request;
 
+        std::string responseBody;
         if (body.empty()) {
-            connection->response()
-                .setCode(HttpCode::Ok)
-                .setBody("request received: " + out.str());
+            responseBody = "request received: " + out.str();
         } else {
             unsigned long bodySize = body.size();
             std::string bodyContent(body.begin(), body.end());
-
-            connection->response()
-                .setCode(HttpCode::Ok)
-                .setBody("request received entirely: " + out.str() +
-                         ", body size: " + std::to_string(bodySize) +
-                         "\n\nBody:\n" + bodyContent);
+            responseBody = "request received entirely: " + out.str() +
+                                       ", body size: " + std::to_string(bodySize) +
+                                       "\n\nBody:\n" + bodyContent;
         }
+        connection->response().setCode(HttpCode::Ok).setBody(boost::string_ref(responseBody));
 
         HTTPP::HTTP::setShouldConnectionBeClosed(request, connection->response());
         connection->sendResponse(); // connection pointer may become invalid
