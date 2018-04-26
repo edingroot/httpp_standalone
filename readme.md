@@ -1,13 +1,13 @@
 # HTTPP Standalone Demo
 
-This is a demo usage of [daedric/HTTPP](https://github.com/daedric/httpp) with standalone source code (tested on macOS High Sierra).  
+This is a demo usage of [daedric/httpp](https://github.com/daedric/httpp) with standalone source code (tested on macOS High Sierra).  
 
 
 ## Configuration Steps
 
 ### Part A: Install commonpp
 Download and install [daedric/commonpp](https://github.com/daedric/commonpp)
-which is required by [daedric/HTTPP](https://github.com/daedric/httpp).
+which is required by [daedric/httpp](https://github.com/daedric/httpp).
 
 Clone the git repository.  
 ``` $ git clone https://github.com/daedric/commonpp ```

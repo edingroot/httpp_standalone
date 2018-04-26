@@ -1,11 +1,8 @@
 /*
- * Part of HTTPP.
+ * Modified sample from HTTPP.
  *
- * Distributed under the 2-clause BSD licence (See LICENCE.TXT file at the
+ * Distributed under the 2-clause BSD licence (See LICENCE.TXT file at the HTTPP
  * project root).
- *
- * Copyright (c) 2014 Thomas Sanchez.  All rights reserved.
- *
  */
 
 #include <iostream>
@@ -13,59 +10,52 @@
 #include <chrono>
 
 #include <httpp/HttpServer.hpp>
+#include <httpp/http/RestDispatcher.hpp>
 #include <httpp/http/Utils.hpp>
 #include <httpp/utils/Exception.hpp>
 
 using HTTPP::HttpServer;
 using HTTPP::HTTP::Request;
 using HTTPP::HTTP::Connection;
+using HTTPP::HTTP::RestDispatcher;
+using HTTPP::HTTP::helper::ReadWholeRequest;
 using HTTPP::HTTP::HttpCode;
+using HTTPP::HTTP::Method;
+using HTTPP::HTTP::Route;
 
-void handler(Connection *connection) {
-    read_whole_request(connection, [](std::unique_ptr <
-                                      HTTPP::HTTP::helper::ReadWholeRequest> hndl,
-                                      const boost::system::error_code &ec) {
-        const auto &body = hndl->body;
-        const auto &connection = hndl->connection;
-        const auto &request = connection->request();
+void handler_without_body(Connection* connection) {
+    connection->response().setCode(HttpCode::Ok).setBody(boost::string_ref("Hello GET!"));
+    HTTPP::HTTP::setShouldConnectionBeClosed(connection->request(), connection->response());
+    connection->sendResponse(); // connection pointer may become invalid
+}
 
-        if (ec) {
-            throw HTTPP::UTILS::convert_boost_ec_to_std_ec(ec);
-        }
-
-        std::ostringstream out;
-        out << request;
-
-        std::string responseBody;
-        if (body.empty()) {
-            responseBody = "request received: " + out.str();
-        } else {
-            unsigned long bodySize = body.size();
-            std::string bodyContent(body.begin(), body.end());
-            responseBody = "request received entirely: " + out.str() +
-                                       ", body size: " + std::to_string(bodySize) +
-                                       "\n\nBody:\n" + bodyContent;
-        }
-        connection->response().setCode(HttpCode::Ok).setBody(boost::string_ref(responseBody));
-
-        HTTPP::HTTP::setShouldConnectionBeClosed(request, connection->response());
-        connection->sendResponse(); // connection pointer may become invalid
-
-        auto end = Request::Clock::now();
-        auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(
-            end - request.received);
-        std::cout << "Request handled in: " << elapsed.count() << "us"
-                  << std::endl;
-    });
+void handler_with_body(ReadWholeRequest::Handle handle) {
+    auto connection = handle->connection;
+    // do something with handle->body
+    connection->response().setCode(HttpCode::Ok).setBody(boost::string_ref("Hello POST!"));
+    HTTPP::HTTP::setShouldConnectionBeClosed(connection->request(), connection->response());
+    connection->sendResponse(); // connection pointer may become invalid
 }
 
 int main(int, char **) {
-    HttpServer server;
+    commonpp::core::init_logging();
+    commonpp::core::set_logging_level(commonpp::debug);
+    HttpServer server(1);
     server.start();
-    server.setSink(&handler);
+
+    RestDispatcher dispatcher(server);
+    dispatcher.add<Method::GET>("/", (Route::WithoutBodyHandler) &handler_without_body);
+    dispatcher.add<Method::POST>("/", (Route::WithBodyHandler) &handler_with_body);
+
+    dispatcher.add<Method::PUT, Method::DELETE_, Method::HEAD, Method::CONNECT>(
+        "/", (Route::WithoutBodyHandler) [](Connection *connection) {
+            connection->response().setCode(HttpCode::Forbidden);
+            HTTPP::HTTP::setShouldConnectionBeClosed(connection->request(),
+                                                     connection->response());
+            connection->sendResponse(); // connection pointer may become invalid
+        });
+
     server.bind("0.0.0.0", "8080");
-    server.bind("localhost", "8081");
-    server.bind("localhost", "8082");
 
     // Loop until EOF
     std::string line;
