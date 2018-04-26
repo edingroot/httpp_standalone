@@ -21,38 +21,33 @@ using HTTPP::HTTP::Request;
 using HTTPP::HTTP::Connection;
 using HTTPP::HTTP::HttpCode;
 
-void handler(Connection* connection)
-{
-    read_whole_request(connection, [](std::unique_ptr<
-                                          HTTPP::HTTP::helper::ReadWholeRequest> hndl,
-                                      const boost::system::error_code& ec) {
-        const auto& body = hndl->body;
-        const auto& connection = hndl->connection;
-        const auto& request  = connection->request();
+void handler(Connection *connection) {
+    read_whole_request(connection, [](std::unique_ptr <
+                                      HTTPP::HTTP::helper::ReadWholeRequest> hndl,
+                                      const boost::system::error_code &ec) {
+        const auto &body = hndl->body;
+        const auto &connection = hndl->connection;
+        const auto &request = connection->request();
 
-        if (ec)
-        {
+        if (ec) {
             throw HTTPP::UTILS::convert_boost_ec_to_std_ec(ec);
         }
 
         std::ostringstream out;
         out << request;
 
-        if (body.empty())
-        {
+        if (body.empty()) {
             connection->response()
                 .setCode(HttpCode::Ok)
                 .setBody("request received: " + out.str());
-        }
-        else
-        {
+        } else {
             unsigned long bodySize = body.size();
             std::string bodyContent(body.begin(), body.end());
 
             connection->response()
                 .setCode(HttpCode::Ok)
                 .setBody("request received entirely: " + out.str() +
-                         ", body size: " + std::to_string(body.size()) +
+                         ", body size: " + std::to_string(bodySize) +
                          "\n\nBody:\n" + bodyContent);
         }
 
@@ -67,13 +62,22 @@ void handler(Connection* connection)
     });
 }
 
-int main(int, char**)
-{
+int main(int, char **) {
     HttpServer server;
     server.start();
     server.setSink(&handler);
     server.bind("0.0.0.0", "8080");
     server.bind("localhost", "8081");
     server.bind("localhost", "8082");
-    while (true) std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+    // Loop until EOF
+    std::string line;
+    while (std::getline(std::cin, line)) {
+        if (line.find(27) != std::string::npos)
+            break;
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
+    std::cout << "Stopping server." << std::endl;
+
+    return 0;
 }
